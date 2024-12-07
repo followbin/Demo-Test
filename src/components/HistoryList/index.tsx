@@ -1,4 +1,4 @@
-import { Button, Modal } from 'antd';
+import { Button, FloatButton, Modal } from 'antd';
 import React, { useState } from'react';
 import { useGiftExchangeContext } from '../../context/giftExchangeContext';
 interface HistoryRecord {
@@ -21,7 +21,6 @@ const HistoryList:React.FC<GiftExchangeHistoryProps> = ({ visible,onClose }) => 
 
   const onClear = () => {
     setHistory([])
-    console.log('清除历史记录');
   }
   
     return (

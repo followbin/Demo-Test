@@ -5,7 +5,7 @@ import HistoryList from "../../components/HistoryList";
 import styles from "./index.module.css";
 import Background from "../assets/background.jpg";
 import { GiftExchangeContext } from "../../context/giftExchangeContext";
-import { Button } from "antd";
+import { Button, FloatButton } from "antd";
 
 function GiftExchange() {
   const [histotryVisible, setHistoryVisible] = useState(false);

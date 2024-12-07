@@ -1,11 +1,50 @@
-
-
 .label {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 .container {
-    margin-top: 20px;
-    border: 1px solid #ccc;
-    padding: 10px;
+  margin-top: 20px;
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
+.giftList {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 创建两列，每列等宽 */
+  grid-template-rows: 50% 50%;
+  grid-gap: 10px; /* 网格间隔为10px */
+  justify-items: center; /* 水平方向居中对齐每个网格项 */
+  align-items: center; /* 垂直方向居中对齐每个网格项 */
+  border: 1px solid #ccc; /* 添加边框 */
+  overflow: auto;
+  height: 30vh;
+}
+
+.gitfitem {
+  background-color: #f9f9f9; /* 物品的背景色 */
+  padding: 15px; /* 物品的内边距 */
+  text-align: center; /* 文本居中 */
+  border-radius: 5px; /* 圆角效果 */
+}
+
+.giftAction {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+@keyframes rotate-rise {
+  0% {
+    transform: translateY(0) rotateZ(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotateZ(180deg);
+  }
+  100% {
+    transform: translateY(0) rotateZ(360deg);
+  }
+}
+
+.successItem {
+  animation: rotate-rise 1.2s ease-in-out;
 }

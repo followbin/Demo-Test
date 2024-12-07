@@ -1,9 +1,11 @@
 import { Button, Input, message } from "antd";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, version } from "react";
 import styles from "./index.module.css";
 import GiftInfo from "../GiftInfo";
 import { useGiftExchangeContext } from "../../context/giftExchangeContext";
 import { useDebounceFn } from "ahooks";
+import cls from "classnames";
+import { Html5QrcodeScanner } from "html5-qrcode";
 
 const CodeInput: React.FC = () => {
   const { history, setHistory } = useGiftExchangeContext();
@@ -11,15 +13,30 @@ const CodeInput: React.FC = () => {
   const inputsRef = useRef<any>([]);
   const [giftInfoVisible, setGiftInfoVisible] = useState(false);
   const [giftInfo, setGiftInfo] = useState<GiftInfo>();
+  const [error, setError] = useState("");
+  const [errorIndex, setErrorIndex] = useState(-1);
+
   // 辅助函数：检查输入是否为有效的4位数字
   const isValidFourDigits = (input: string) => /^\d{4}$/.test(input);
 
   const handleInputChange = (index: number, value: string) => {
+    const newInput = value.replace(/\D/g, "");
+    if (newInput.length < value.length) {
+      setError("输入格式不正确，请输入4位数字");
+      setErrorIndex(index);
+    } else {
+      setError("");
+      setErrorIndex(-1);
+    }
     const newCodeParts = [...codeParts];
     newCodeParts[index] = value.slice(0, 4); // 限制只取前4位，防止输入过多字符
     setCodeParts(newCodeParts);
     if (value.length === 4 && index < 3) {
       inputsRef.current[index + 1]?.focus();
+    }
+    //自动兑换
+    if (index === 3) {
+      handleVerifyCode.run(newCodeParts.join(""));
     }
   };
 
@@ -36,14 +53,14 @@ const CodeInput: React.FC = () => {
       inputsRef.current.forEach(
         (input: any, index: number) => (input.value = newCodeParts[index])
       );
+      handleVerifyCode.run(newCodeParts.join(""));
     } else {
-      // 如果粘贴内容不符合要求，给出提示或者进行合适的处理，这里简单打印错误信息示例
-      console.error("粘贴的兑换码格式不正确，请确保是16位数字");
+      setError("粘贴的兑换码格式不正确，请确保是16位数字");
     }
   };
 
   const handleVerifyCode = useDebounceFn(
-    async (code: string) => {
+    (code: string) => {
       // 这里需要实际调用后端接口，暂时模拟返回数据
       const mockResponse: VerifyCodeResponse = {
         success: true,
@@ -53,6 +70,42 @@ const CodeInput: React.FC = () => {
           description: "包含一些基础道具，助力新手玩家",
           expireTime: "2025-12-31",
           items: [
+            {
+              id: "item1",
+              name: "金币",
+              icon: "coin.png",
+              amount: 100,
+            },
+            {
+              id: "item2",
+              name: "宝石",
+              icon: "gem.png",
+              amount: 10,
+            },
+            {
+              id: "item1",
+              name: "金币",
+              icon: "coin.png",
+              amount: 100,
+            },
+            {
+              id: "item2",
+              name: "宝石",
+              icon: "gem.png",
+              amount: 10,
+            },
+            {
+              id: "item1",
+              name: "金币",
+              icon: "coin.png",
+              amount: 100,
+            },
+            {
+              id: "item2",
+              name: "宝石",
+              icon: "gem.png",
+              amount: 10,
+            },
             {
               id: "item1",
               name: "金币",
@@ -111,7 +164,7 @@ const CodeInput: React.FC = () => {
       sum += digit;
       shouldDouble = !shouldDouble;
     }
-    console.log(sum,code)
+    console.log(sum, code);
     return sum % 10 === 0;
   };
   const handleVerifyClick = () => {
@@ -125,46 +178,90 @@ const CodeInput: React.FC = () => {
     ) {
       if (luhnCheck(code)) {
         handleVerifyCode.run(code);
-      }else{
+      } else {
         message.error("兑换码无效，请检查输入是否正确");
       }
     } else {
       message.error("请输入正确格式的兑换码");
     }
   };
+
+  const startScanner = () => {
+    const scanner = new Html5QrcodeScanner(
+      "reader",
+      {
+        fps: 10, // 设置扫描帧率
+        qrbox: { width: 250, height: 250 }, // 设置扫描区域大小
+      },
+      false
+    );
+    scanner.render(
+      (success) => {
+        if (success) {
+          const scannedText = success;
+          const parts = scannedText.match(/.{1,4}/g);
+          if (parts && parts.length === 4) {
+            const newCodeParts = parts.map((part) => part.padEnd(4, "0"));
+            setCodeParts(newCodeParts);
+            inputsRef.current.forEach(
+              (input, index) => (input.value = newCodeParts[index])
+            );
+            scanner.clear(); // 扫描成功后关闭扫描器
+          } else {
+            message.error(
+              "扫描到的兑换码格式不正确，请确保是16位且可按4位一组划分"
+            );
+            scanner.clear();
+          }
+        }
+      },
+      (error) => {
+        // message.error("扫描失败，请重试");
+      }
+    );
+  };
+
   return (
-    <div className={styles.container}>
-      <div className={styles.label}>请输入兑换码</div>
-      <div className={styles.codeInputContainer}>
-        {codeParts.map((part, index) => (
-          <Input
-            key={index}
-            type="text"
-            maxLength={4}
-            value={part}
-            style={{ width: "100px", marginRight: "10px" }}
-            onChange={(e) => handleInputChange(index, e.target.value)}
-            onPaste={handlePaste}
-            onKeyDown={(e) => {
-              if (e.key === "Backspace" && part === "") {
-                inputsRef.current[Math.max(0, index - 1)].focus();
-              }
-            }}
-            ref={(el) => (inputsRef.current[index] = el)}
+    <>
+      <div className={styles.container}>
+        <div className={styles.label}>请输入兑换码</div>
+        <div className={styles.codeInputContainer}>
+          {codeParts.map((part, index) => (
+            <Input
+              key={index}
+              type="text"
+              maxLength={4}
+              value={part}
+              className={cls({ [styles.shake]: errorIndex === index && error })}
+              style={{ width: "60px", marginRight: "10px" }}
+              onChange={(e) => handleInputChange(index, e.target.value)}
+              onPaste={handlePaste}
+              onKeyDown={(e) => {
+                if (e.key === "Backspace" && part === "") {
+                  inputsRef.current[Math.max(0, index - 1)].focus();
+                }
+              }}
+              ref={(el) => (inputsRef.current[index] = el)}
+            />
+          ))}
+        </div>
+        <Button type="primary" onClick={handleVerifyClick}>
+          验证兑换码
+        </Button>
+        <Button style={{marginLeft:10}} onClick={startScanner}>扫码输入</Button>
+
+        {giftInfo && (
+          <GiftInfo
+            visible={giftInfoVisible}
+            onClose={() => setGiftInfoVisible(false)}
+            giftInfo={giftInfo}
           />
-        ))}
+        )}
       </div>
-      <Button type="primary" onClick={handleVerifyClick}>
-        验证兑换码
-      </Button>
-      {giftInfo && (
-        <GiftInfo
-          visible={giftInfoVisible}
-          onClose={() => setGiftInfoVisible(false)}
-          giftInfo={giftInfo}
-        />
-      )}
-    </div>
+      <div className={styles.error}>{error}</div>
+
+      <div id="reader"></div>
+    </>
   );
 };
 

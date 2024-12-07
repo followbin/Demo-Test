@@ -1,9 +1,10 @@
-import { Button, message, Modal } from "antd";
-import React from "react";
+import { Button, message, Modal, Row } from "antd";
+import React, { useEffect, useState } from "react";
 import { useGiftExchangeContext } from "../../context/giftExchangeContext";
 import gift1 from "../../assets/images/gift1.png";
 import styles from "./index.module.css";
 import { useDebounceFn } from "ahooks";
+import cls from "classnames";
 
 interface GiftInfoProps {
   giftInfo: GiftInfo;
@@ -13,9 +14,12 @@ interface GiftInfoProps {
 
 const GiftInfo: React.FC<GiftInfoProps> = ({ giftInfo, visible, onClose }) => {
   const { history, setHistory } = useGiftExchangeContext();
+  const [isloading, setIsloading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const handleRedeemGift = useDebounceFn(
-    async () => {
+    () => {
+      setIsloading(true);
       // 模拟领取礼包接口返回
       const mockResponse = {
         success: true,
@@ -43,7 +47,15 @@ const GiftInfo: React.FC<GiftInfoProps> = ({ giftInfo, visible, onClose }) => {
           ...history,
         ].slice(0, 5);
         setHistory(newHistory);
+        setSuccess(true);
+        message.success("领取成功");
+        setTimeout(() => {
+          setIsloading(false);
+          onClose();
+        }, 1000);
       } else {
+        setIsloading(false);
+
         message.warning(
           `错误码: ${mockResponse.error.code}, 消息: ${mockResponse.error.message}`
         );
@@ -74,19 +86,32 @@ const GiftInfo: React.FC<GiftInfoProps> = ({ giftInfo, visible, onClose }) => {
           <span className="label">有效期：</span>
           <span>{giftInfo.expireTime}</span>
         </p>
+        <h3>礼包物品列表</h3>
+        <div className={styles.giftList}>
+          {giftInfo.items.map((item) => (
+            <div
+              key={item.id}
+              className={cls({
+                [styles.giftItem]: true,
+                [styles.successItem]: success,
+              })}
+            >
+              <img src={gift1} alt={item.name} />
+              {item.name}: {item.amount}
+            </div>
+          ))}
+        </div>
       </div>
-      <h3>礼包物品列表</h3>
-      <ul>
-        {giftInfo.items.map((item) => (
-          <li key={item.id}>
-            <img src={gift1} alt={item.name} />
-            {item.name}: {item.amount}
-          </li>
-        ))}
-      </ul>
-      <Button type="primary" onClick={handleRedeemGift.run}>
-        领取礼包
-      </Button>
+
+      <div className={styles.giftAction}>
+        <Button
+          type="primary"
+          onClick={handleRedeemGift.run}
+          disabled={isloading}
+        >
+          领取礼包
+        </Button>
+      </div>
     </Modal>
   );
 };
