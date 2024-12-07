@@ -28,7 +28,7 @@ const HistoryList:React.FC<GiftExchangeHistoryProps> = ({ visible,onClose }) => 
         <Modal title="兑换记录" open = {visible} onCancel={onClose}  okButtonProps={{hidden:true}} cancelButtonProps={{hidden:true}}>
             <Button type="primary" onClick={onClear}>清除历史记录</Button>
             <ul>
-                {history?.map?.((record, index) => (
+                {history.map?.((record, index) => (
                     <li key={index}>
                         {record.time} - {record.giftName}: {record.status}
                     </li>

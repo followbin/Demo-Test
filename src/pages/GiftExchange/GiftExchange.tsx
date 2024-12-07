@@ -8,19 +8,16 @@ import { GiftExchangeContext } from "../../context/giftExchangeContext";
 import { Button } from "antd";
 
 function GiftExchange() {
-  const [verificationResult, setVerificationResult] = useState(null);
-  const [giftInfo, setGiftInfo] = useState(null);
-  const [giftVisible,setGiftVisible] = useState(false)
   const [histotryVisible, setHistoryVisible] = useState(false);
-  const [history, setHistory] = useState([]);
+  const [history, setHistory] = useState<HistoryRecordItem[]>([]);
 
   useEffect(() => {
     const storedHistory =
-      JSON.parse(localStorage?.getItem("gift_exchange_history") || "{}") || [];
+      JSON.parse(localStorage?.getItem("gift_exchange_history") || "[]") || [];
     setHistory(storedHistory);
   }, []);
 
-  const handleHistory = (history) => {
+  const handleHistory = (history:HistoryRecordItem[]) => {
     localStorage.setItem("gift_exchange_history", JSON.stringify(history));
     setHistory(history);
   };
@@ -33,7 +30,6 @@ function GiftExchange() {
         <main className={styles.main}>
           <h1>游戏礼包兑换系统</h1>
           <CodeInput />
-          {giftInfo && <GiftInfo visible={ giftVisible} onClose={() => setGiftInfo(null)} giftInfo={giftInfo} />}
           <HistoryList  visible={histotryVisible} onClose={() => setHistoryVisible(false)}/>
          <Button onClick={() => setHistoryVisible(true)}>我的礼包</Button>
         </main>
