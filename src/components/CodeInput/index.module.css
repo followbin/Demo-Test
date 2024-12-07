@@ -1,0 +1,15 @@
+.container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50vh;
+    width: 100%;
+    background-size: 300% 300%;
+}
+
+.label{
+    font-size: 20px;
+    font-weight: bold;
+    color: black;
+    margin-right: 10px;
+}
